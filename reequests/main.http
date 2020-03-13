@@ -1,0 +1,11 @@
+# subgroups > projects
+GET https://gitlab.com/api/v4/groups/7378279/subgroups HTTP/1.1
+PRIVATE-TOKEN: AWoX8DwoCV6_NyvXY8B9
+
+# user data
+GET https://gitlab.com/api/v4/users?username=erickvieira HTTP/1.1
+Private-Token: AWoX8DwoCV6_NyvXY8B9
+
+# user groups
+GET https://gitlab.com/api/v4/groups?page=1 HTTP/1.1
+PRIVATE-TOKEN: AWoX8DwoCV6_NyvXY8B9

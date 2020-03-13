@@ -1,10 +1,7 @@
 #!/usr/bin/env node
 
 const program = require('commander');
-const package = require('../package.json');
 const massiveClone = require('../cli/massiveClone');
-
-program.version(package.version);
 
 program.command(
   'clone [path]'

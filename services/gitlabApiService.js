@@ -16,7 +16,6 @@ const getProjectsConsideringSubgroups = async (
   groups = [],
   projects = [],
 ) => {
-  console.log(groups.map(({ id }) => id))
   if (groups.length > 0) {
     projects = projects.concat((
       await Promise.all(groups.map(async ({ id }) => (

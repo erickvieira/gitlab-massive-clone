@@ -2,6 +2,7 @@ const inquirer = require('inquirer');
 const chalk = require('chalk');
 const shell = require('shelljs');
 const { Spinner } = require('cli-spinner');
+const Table = require('cli-table');
 const { defaultSpinner } = require('../settings/constants');
 
 const {
@@ -83,13 +84,13 @@ const massiveClone = async (path, options) => {
   const selectedGroups = groups.filter(({ id }) => (
     groupsPrompt.selected.includes(id)
   ));
-  const groupProjectsRequests = await (
+  const projects = await (
     getProjectsConsideringSubgroups(selectedGroups, [])
   );
-  choices = groupProjectsRequests.map(g => ({
+  choices = projects.map(g => ({
     name: g.full_name,
     short: g.path,
-    value: g.full_path,
+    value: g.id,
     type: 'choice'
   }));
   spinner.stop(true);
@@ -102,7 +103,52 @@ const massiveClone = async (path, options) => {
     choices,
   });
 
-  console.log(reposPrompt.selected);
+  spinner.setSpinnerTitle(`${chalk.green('%s')} Creating dir structure...`);
+  spinner.start();
+  const selectedProjects = projects.filter(({ id }) => (
+    reposPrompt.selected.includes(id)
+  ));
+
+  let dirs = [];
+  const rootDir = shell.exec('pwd', { silent: true }).stdout;
+  const clonedRepos = []
+  let gitCloneResult;
+  selectedProjects.forEach(p => {
+    dirs = p.full_path.split('/');
+    dirs.pop();
+    dirs.forEach(dir => {
+      shell.exec(`mkdir ${dir}`, { silent: true });
+      shell.exec(`cd ${dir}`, { silent: true });
+    });
+    spinner.setSpinnerTitle(`${chalk.green('%s')} Cloning ${p.full_path}...`);
+    gitCloneResult = shell.exec(
+      `git clone https://x-token-auth:${privateKey}@gitlab.com/${p.full_path}.git`
+    );
+    clonedRepos.push({
+      id: p.id,
+      full_path: p.full_path,
+      status: gitCloneResult.code ? chalk.red('×') : chalk.green('✓')
+    });
+    shell.exec(`cd ${rootDir}`);
+  });
+  spinner.stop();
+
+  printResultTable(clonedRepos);
+}
+
+const printResultTable = (data) => {
+  const table = new Table({
+    head: ['id', 'path', 'status'],
+    colWidths: [10, 40, 10]
+  });
+  data.map(({ id, full_path, status }) =>
+    table.push([
+      id,
+      full_path,
+      status
+    ])
+  );
+  console.log(table.toString());
 }
 
 module.exports = massiveClone;
